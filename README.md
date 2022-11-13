@@ -30,11 +30,12 @@ For the project, we will be trying to replicate a basic version of the game Spac
 - An obstacle can travel across the player's screen halves.  
 
 ### Game Ending Conditions
-- When the timer ends, the player with the higher score is declared the winner
-- If the position of the pipe on the X-Axis is the same as that of the bird and the bird's position on the Y-Axis is not part of the pipe's gap, then a collision is determined and the game ends
+- When the timer ends, the player with the higher score is declared the winner.
+- If the position of the pipe on the X-Axis is the same as that of the bird and the bird's position on the Y-Axis is not part of the pipe's gap, then a collision is determined and the game ends.
 
 ### Wishlist of features
-- Presently, the game expects both the players to play on the same keyboard (with one player using "arrow" keys and the other player using "W-A-S-D" keys for movement). But if time permits, we will implement support for online multiplayer
+- Presently, the game expects both the players to play on the same keyboard (with one player using "arrow" keys and the other player using "W-A-S-D" keys for movement). But if time permits, we will implement support for online multiplayer.
+- Leaderboard history.
 
 ### Reference
 [Game List Reference](https://dev.to/lukegarrigan/top-5-best-games-to-code-as-a-beginner-9n)
