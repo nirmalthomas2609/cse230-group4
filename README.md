@@ -37,4 +37,4 @@ For the project, we will be trying to replicate a basic version of the game Spac
 - Presently, the game expects both the players to play on the same keyboard (with one player using "arrow" keys and the other player using "W-A-S-D" keys for movement). But if time permits, we will implement support for online multiplayer
 
 ### Reference
-[Games List Reference](https://dev.to/lukegarrigan/top-5-best-games-to-code-as-a-beginner-9n)
+[Game List Reference](https://dev.to/lukegarrigan/top-5-best-games-to-code-as-a-beginner-9n)
