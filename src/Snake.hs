@@ -56,8 +56,8 @@ makeLenses ''Game
 -- Constants
 
 height, width :: Int
-height = 20
-width = 20
+height = 15
+width = 15
 
 -- Functions
 
@@ -84,10 +84,11 @@ die = do
 eatFood :: MaybeT (State Game) ()
 eatFood = do
   MaybeT . fmap guard $ (==) <$> (nextHead <$> get) <*> (use food)
-  MaybeT . fmap Just $ do
-    modifying score (+ 10)
-    get >>= \g -> modifying snake (nextHead g <|)
-    nextFood
+  MaybeT . fmap Just $ dead .= True
+    -- die
+    -- modifying score (+ 10)
+    -- get >>= \g -> modifying snake (nextHead g <|)
+    -- nextFood
 
 -- | Set a valid next food coordinate
 nextFood :: State Game ()
@@ -121,9 +122,10 @@ turn d g = if g ^. locked
   else g & dir %~ turnDir d & paused .~ False & locked .~ True
 
 turnDir :: Direction -> Direction -> Direction
-turnDir n c | c `elem` [North, South] && n `elem` [East, West] = n
-            | c `elem` [East, West] && n `elem` [North, South] = n
-            | otherwise = c
+turnDir n c = n
+-- | c `elem` [North, South] && n `elem` [East, West] = n
+--             | c `elem` [East, West] && n `elem` [North, South] = n
+--             | otherwise = c
 
 -- | Initialize a paused game with random food location
 initGame :: IO Game
