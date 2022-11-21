@@ -101,10 +101,14 @@ nextFood = do
 
 -- | Move snake along in a marquee fashion
 move :: Game -> Game
-move g@Game { _snake = (s :|> _) } = g & snake .~ (nextHead g <| s)
+move g@Game { _snake = (s :|> _) } = g & snake .~ (nextHead g <| s) & (g & food .~ (nextFoodPos g) 
 move _                             = error "Snakes can't be empty!"
 
 -- | Get next head position of the snake
+nextFoodPos :: Game -> Coord
+nextFoodPos Game { _food = f} = f & _x %~ (\x -> (x+1) `mod` width)
+nextFoodPos _ = error "Snakes can't be empty!"
+
 nextHead :: Game -> Coord
 nextHead Game { _dir = d, _snake = (a :<| _) }
   | d == North = a & _y %~ (\y -> (y + 1) `mod` height)
