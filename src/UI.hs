@@ -69,7 +69,7 @@ main = do
 
 handleEvent :: Game -> BrickEvent Name Tick -> EventM Name (Next Game)
 handleEvent g (AppEvent Tick)                       = continue $ step g
-handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ turn North g
+handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ turn North g 
 handleEvent g (VtyEvent (V.EvKey V.KDown []))       = continue $ turn South g
 handleEvent g (VtyEvent (V.EvKey V.KRight []))      = continue $ turn East g
 handleEvent g (VtyEvent (V.EvKey V.KLeft []))       = continue $ turn West g

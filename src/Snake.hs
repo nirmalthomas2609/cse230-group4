@@ -56,8 +56,8 @@ makeLenses ''Game
 -- Constants
 
 height, width :: Int
-height = 15
-width = 15
+height = 30
+width = 30
 
 -- Functions
 
@@ -77,7 +77,7 @@ step s = flip execState s . runMaybeT $ do
 -- | Possibly die if next head position is in snake
 die :: MaybeT (State Game) ()
 die = do
-  MaybeT . fmap guard $ elem <$> (nextHead <$> get) <*> (use snake)
+  MaybeT . fmap guard $ elem <$> use food <*> (use snake)
   MaybeT . fmap Just $ dead .= True
 
 -- | Possibly eat food if next head position is food
@@ -90,6 +90,9 @@ eatFood = do
     -- get >>= \g -> modifying snake (nextHead g <|)
     -- nextFood
 
+-- aroundHead :: Game -> [Coord]
+
+
 -- | Set a valid next food coordinate
 nextFood :: State Game ()
 nextFood = do
@@ -101,16 +104,21 @@ nextFood = do
 
 -- | Move snake along in a marquee fashion
 move :: Game -> Game
-move g@Game { _snake = (s :|> _) } = g & snake .~ (nextHead g <| s) & (g & food .~ (nextFoodPos g) 
+move g@Game { _snake = (s :|> _) } = do g & food .~ (nextFoodPos g)
+-- snake .~ (nextHead g <| s) &
 move _                             = error "Snakes can't be empty!"
+
+moveFood :: Game -> Game
+moveFood g@Game { _snake = (s :|> _) } = g & food .~ (nextFoodPos g) 
+moveFood _                             = error "Snakes can't be empty!"
 
 -- | Get next head position of the snake
 nextFoodPos :: Game -> Coord
 nextFoodPos Game { _food = f} = f & _x %~ (\x -> (x+1) `mod` width)
 nextFoodPos _ = error "Snakes can't be empty!"
-
+  
 nextHead :: Game -> Coord
-nextHead Game { _dir = d, _snake = (a :<| _) }
+nextHead (Game { _dir = d, _snake = (a :<| _) })
   | d == North = a & _y %~ (\y -> (y + 1) `mod` height)
   | d == South = a & _y %~ (\y -> (y - 1) `mod` height)
   | d == East  = a & _x %~ (\x -> (x + 1) `mod` width)
@@ -121,9 +129,9 @@ nextHead _ = error "Snakes can't be empty!"
 --
 -- Implicitly unpauses yet locks game
 turn :: Direction -> Game -> Game
-turn d g = if g ^. locked
+turn d g@Game { _snake = (s :|> _) } = if g ^. locked
   then g
-  else g & dir %~ turnDir d & paused .~ False & locked .~ True
+  else let g_ = (g & dir %~ turnDir d) in g_ & snake .~ (nextHead g_ <| s) & paused .~ False & locked .~ True
 
 turnDir :: Direction -> Direction -> Direction
 turnDir n c = n
