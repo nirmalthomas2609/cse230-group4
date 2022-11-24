@@ -125,6 +125,8 @@ nextHead (Game { _dir = d, _snake = (a :<| _) })
   | d == West  = a & _x %~ (\x -> (x - 1) `mod` width)
 nextHead _ = error "Snakes can't be empty!"
 
+nextShipPos :: 
+
 -- | Turn game direction (only turns orthogonally)
 --
 -- Implicitly unpauses yet locks game
@@ -132,6 +134,10 @@ turn :: Direction -> Game -> Game
 turn d g@Game { _snake = (s :|> _) } = if g ^. locked
   then g
   else let g_ = (g & dir %~ turnDir d) in g_ & snake .~ (nextHead g_ <| s) & paused .~ False & locked .~ True
+
+myseq = S.fromList [V2 0 0, V2 7 8, V2 9 0, V2 6 7]
+whatiss :: Seq a -> Seq a
+whatiss (s :|> _) = s
 
 turnDir :: Direction -> Direction -> Direction
 turnDir n c = n
@@ -147,7 +153,7 @@ initGame = do
   let xm = width `div` 2
       ym = height `div` 2
       g  = Game
-        { _snake  = (S.singleton (V2 xm ym))
+        { _snake  = S.fromList [V2 xm ym, V2 xm (ym - 1), V2 xm (ym - 2)] --(S.singleton (V2 xm ym))
         , _food   = f
         , _foods  = fs
         , _score  = 0
