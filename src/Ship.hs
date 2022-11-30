@@ -1,13 +1,13 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
-module Snake
+module Ship
   ( initGame
   , step
   , turn
   , Game(..)
   , Direction(..)
-  , dead, food, score, snake
+  , dead, rocks, score, ship
   , height, width
   ) where
 
@@ -27,7 +27,7 @@ import System.Random (Random(..), newStdGen)
 data Game = Game
   { _ship  :: Ship        -- ^ snake as a sequence of points in N2
   , _rocks   :: [Rock]        -- ^ location of the food
-  , _rockGenerator  :: Stream (Int, Int) -- ^ infinite list of random next food locations
+  , _rockGenerator  :: [(Int, Int)] -- ^ infinite list of random next food locations
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
   } deriving (Show)
@@ -41,12 +41,29 @@ type Ship = [Coord]
 data Stream a = a :| Stream a
   deriving (Show)
 
+data Direction
+  = North
+  | South
+  | East
+  | West
+  deriving (Eq, Show)
+
+makeLenses ''Game
+
+-- Constants
+
+height, width :: Int
+height = 30
+width = 30
+
 nextRocks :: State Game ()
 nextRocks = do
-  (f :| fs) <- use rockGenerator
-  rocksGenerator .= fs
+  (f : fs) <- use rockGenerator
+  rockGenerator .= fs
   rocks .= rocks ++ [rockProducer f]
   return ()
+
+
 
 -- killRocks :: Game -> Game
 -- killRocks g@Game {_rocks = (r:rs)}
@@ -71,7 +88,7 @@ moveRocks (((x, y), 0):rs)  = ((x+1, y), 0):moveRocks rs
 moveRocks (((x, y), 1):rs)  = ((x-1, y), 1):moveRocks rs
 
 moveSpace :: Game -> Game
-moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks . moveRocks rrs)
+moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks (moveRocks rrs))
 
 startingCoords :: Ship
 startingCoords = [(5, 5)]
@@ -95,13 +112,14 @@ hasCollidedRocks s []       = False
 
 addRocksAtRandom :: State Game ()
 addRocksAtRandom = do
-  status <- drawInt 0 1
-  case status of
-    0 -> return ()
-    1 -> nextRocks
+  (f : fs) <- use rockGenerator
+  rockGenerator .= fs
+  case f of
+    (0, _) -> return ()
+    (_, _) -> nextRocks
 
 resetShip :: Game -> Game
-resetShip g = g $ ship .~ startingCoords
+resetShip g = g & ship .~ startingCoords
 
 die :: Game -> Game
 die g@Game {_ship = s, _rocks = rss}
@@ -110,7 +128,7 @@ die g@Game {_ship = s, _rocks = rss}
 
 -- movesSpace, die, addRocksAtRandom
 step :: Game -> Game
-step g = execState addRocksAtRandom . moveSpace . die g
+step g = execState addRocksAtRandom (moveSpace (die g))
 -- step s = flip execState s . runMaybeT $ do
 --   s_ = moveSpace s
 --   -- Make sure the game isn't paused or over
@@ -119,11 +137,27 @@ step g = execState addRocksAtRandom . moveSpace . die g
 --   -- die (moved into boundary), eat (moved into food), or move (move into space)
 --   die <|> MaybeT (Just <$> modify move)
 
+directionStep :: Direction -> Coord -> Coord
+directionStep d (x,y)
+  | d == North  = (x, (y + 1) `mod` height)
+  | d == South  = (x, (y - 1) `mod` height)
+  | d == East   = ((x + 1) `mod` width, y)
+  | otherwise   = ((x - 1) `mod` width, y)
+
+moveShip :: Direction -> Ship -> Ship
+moveShip d s = map (directionStep d) s
+
+turn :: Direction -> Game -> Game
+turn d g@Game { _ship = s } = g & ship .~ (moveShip d s)
+
+-- turn :: Direction -> Game -> Game
+-- turn d g@Game { _snake = (s :|> _) } = if g ^. locked
+--   then g
+--   else let g_ = (g & dir %~ turnDir d) in g_ & snake .~ (moveShip g_ <| s) & paused .~ False & locked .~ True
 
 initGame :: IO Game
 initGame = do
-  (f :| fs) <-
-    rocksGenerator
+  (f:fs) <- rocksGenerator
   let xm = width `div` 2
       ym = height `div` 2
       g  = Game
