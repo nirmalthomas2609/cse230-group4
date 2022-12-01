@@ -125,7 +125,7 @@ nextHead (Game { _dir = d, _snake = (a :<| _) })
   | d == West  = a & _x %~ (\x -> (x - 1) `mod` width)
 nextHead _ = error "Snakes can't be empty!"
 
-nextShipPos :: 
+-- nextShipPos :: 
 
 -- | Turn game direction (only turns orthogonally)
 --
