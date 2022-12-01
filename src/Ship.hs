@@ -53,8 +53,8 @@ makeLenses ''Game
 -- Constants
 
 height, width :: Int
-height = 50
-width = 50
+height = 45
+width = 45
 
 updateRockState :: Game -> Rock -> Game
 updateRockState g@Game {_rocks = rrs} s = g & rocks .~ (rrs ++ [s])
@@ -89,18 +89,13 @@ moveSpace :: Game -> Game
 moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks (moveRocks rrs))
 
 startingCoords :: Ship
-startingCoords = [(5, 5),(5,4)]
+startingCoords = [(cx,cy),(cx-1,cy-1),(cx-1,cy-2),(cx+1,cy-1),(cx+1,cy-2)]
+                  where cx  = width `div` 2
+                        cy  = 3
 
 rockProducer :: V2 Int -> Rock
 rockProducer (V2 0 x) = ((0, x), 0)
 rockProducer (V2 _ x) = ((width - 1, x), 1)
-
--- rocksGenerator :: IO [(Int, Int)]
--- rocksGenerator = do
---   g <- newStdGen
---   return (randomRs ((0, 5) , (1, height - 1)) g)
--- gen = mkStdGen 2021
--- randomCoord = (randomR ((0, 5), (1, height - 1)) gen)
 
 hasCollided :: Ship -> Rock -> Bool
 hasCollided (s:ss) (rc, rd) = s==rc || hasCollided ss (rc, rd)
@@ -123,7 +118,7 @@ resetShip g = g & ship .~ startingCoords
 
 die :: Game -> Game
 die g@Game {_ship = s, _rocks = rss}
-  | hasCollidedRocks s rss  = resetShip g
+  | hasCollidedRocks s rss  = resetScore (resetShip g)
   | otherwise               = g
 
 -- movesSpace, die, addRocksAtRandom
@@ -155,13 +150,11 @@ checkIfTop:: Game -> Game
 checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore(resetShip g) else g
 checkIfTop _ = error "Ship can't be empty!"
 
-updateScore:: Game -> Game
+updateScore :: Game -> Game
 updateScore g@Game { _score = s} = g & score .~ (s + 1)
 
--- turn :: Direction -> Game -> Game
--- turn d g@Game { _snake = (s :|> _) } = if g ^. locked
---   then g
---   else let g_ = (g & dir %~ turnDir d) in g_ & snake .~ (moveShip g_ <| s) & paused .~ False & locked .~ True
+resetScore :: Game -> Game
+resetScore g = g & score .~ 0
 
 initGame :: IO Game
 initGame = do
