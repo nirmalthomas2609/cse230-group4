@@ -53,8 +53,8 @@ makeLenses ''Game
 -- Constants
 
 height, width :: Int
-height = 30
-width = 30
+height = 50
+width = 50
 
 updateRockState :: Game -> Rock -> Game
 updateRockState g@Game {_rocks = rrs} s = g & rocks .~ (rrs ++ [s])
@@ -89,7 +89,7 @@ moveSpace :: Game -> Game
 moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks (moveRocks rrs))
 
 startingCoords :: Ship
-startingCoords = [(5, 5)]
+startingCoords = [(5, 5),(5,4)]
 
 rockProducer :: V2 Int -> Rock
 rockProducer (V2 0 x) = ((0, x), 0)
