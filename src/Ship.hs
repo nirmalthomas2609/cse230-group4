@@ -8,7 +8,7 @@ module Ship
   , Game(..)
   , Direction(..)
   , dead, rocks, score, ship
-  , height, width
+  , height, width, Coord
   ) where
 
 import Control.Applicative ((<|>))
@@ -22,12 +22,12 @@ import Control.Monad.Extra (orM)
 import Data.Sequence (Seq(..), (<|))
 import qualified Data.Sequence as S
 import Linear.V2 (V2(..), _x, _y)
-import System.Random (Random(..), newStdGen)
+import System.Random (Random(..), newStdGen, mkStdGen)
 
 data Game = Game
   { _ship  :: Ship        -- ^ snake as a sequence of points in N2
   , _rocks   :: [Rock]        -- ^ location of the food
-  , _rockGenerator  :: [(Int, Int)] -- ^ infinite list of random next food locations
+  , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of random next food locations
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
   } deriving (Show)
@@ -56,18 +56,16 @@ height, width :: Int
 height = 30
 width = 30
 
+updateRockState :: Game -> Rock -> Game
+updateRockState g@Game {_rocks = rrs} s = g & rocks .~ (rrs ++ [s])
+
 nextRocks :: State Game ()
 nextRocks = do
-  (f : fs) <- use rockGenerator
+  (f :| fs) <- use rockGenerator
   rockGenerator .= fs
-  rocks .= rocks ++ [rockProducer f]
+  currGameState <- get
+  put (updateRockState currGameState (rockProducer f))
   return ()
-
-
-
--- killRocks :: Game -> Game
--- killRocks g@Game {_rocks = (r:rs)}
---   | r == ((0, 0), 1) = killRocks (g & rocks .~ rs)
 
 isRockEnd :: Rock -> Bool
 isRockEnd ((0, _), 1)       = True
@@ -93,14 +91,16 @@ moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks (moveRocks rrs))
 startingCoords :: Ship
 startingCoords = [(5, 5)]
 
-rockProducer :: (Int, Int) -> Rock
-rockProducer (0, x) = ((0, x), 0)
-rockProducer (_, x) = ((width - 1, x), 1)
+rockProducer :: V2 Int -> Rock
+rockProducer (V2 0 x) = ((0, x), 0)
+rockProducer (V2 _ x) = ((width - 1, x), 1)
 
-rocksGenerator :: IO [(Int, Int)]
-rocksGenerator = do
-  g <- newStdGen
-  return $ randomRs ((0, 5) , (1, height - 1)) g
+-- rocksGenerator :: IO [(Int, Int)]
+-- rocksGenerator = do
+--   g <- newStdGen
+--   return (randomRs ((0, 5) , (1, height - 1)) g)
+-- gen = mkStdGen 2021
+-- randomCoord = (randomR ((0, 5), (1, height - 1)) gen)
 
 hasCollided :: Ship -> Rock -> Bool
 hasCollided (s:ss) (rc, rd) = s==rc || hasCollided ss (rc, rd)
@@ -112,11 +112,11 @@ hasCollidedRocks s []       = False
 
 addRocksAtRandom :: State Game ()
 addRocksAtRandom = do
-  (f : fs) <- use rockGenerator
-  rockGenerator .= fs
-  case f of
-    (0, _) -> return ()
-    (_, _) -> nextRocks
+    (f :| fs) <- use rockGenerator
+    rockGenerator .= fs
+    case f of
+      (V2 0 _) -> return ()
+      _        -> nextRocks
 
 resetShip :: Game -> Game
 resetShip g = g & ship .~ startingCoords
@@ -148,7 +148,15 @@ moveShip :: Direction -> Ship -> Ship
 moveShip d s = map (directionStep d) s
 
 turn :: Direction -> Game -> Game
-turn d g@Game { _ship = s } = g & ship .~ (moveShip d s)
+turn d g@Game { _ship = s } = checkIfTop(g & ship .~ moveShip d s)
+
+
+checkIfTop:: Game -> Game
+checkIfTop g@Game{_ship = (x,y):xs} = if y >= height then updateScore(resetShip g) else g
+checkIfTop _ = error "Ship can't be empty!"
+
+updateScore:: Game -> Game
+updateScore g@Game { _score = s} = g & score .~ (s + 1)
 
 -- turn :: Direction -> Game -> Game
 -- turn d g@Game { _snake = (s :|> _) } = if g ^. locked
@@ -157,7 +165,8 @@ turn d g@Game { _ship = s } = g & ship .~ (moveShip d s)
 
 initGame :: IO Game
 initGame = do
-  (f:fs) <- rocksGenerator
+  (f :| fs) <-
+    fromList . randomRs (V2 1 5, V2 1 height-1) <$> newStdGen
   let xm = width `div` 2
       ym = height `div` 2
       g  = Game
@@ -168,3 +177,6 @@ initGame = do
         , _dead   = False
         }
   return g
+
+fromList :: [a] -> Stream a
+fromList = foldr (:|) (error "Streams must be infinite")

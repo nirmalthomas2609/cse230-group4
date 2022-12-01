@@ -6,7 +6,19 @@ import Control.Monad.IO.Class (liftIO)
 import Control.Concurrent (threadDelay, forkIO)
 import Data.Maybe (fromMaybe)
 
-import Snake
+import Ship
+    ( Direction(West, North, South, East),
+      Game,
+      Coord,
+      dead,
+      rocks,
+      score,
+      ship,
+      height,
+      width,
+      step,
+      turn,
+      initGame )
 
 import Brick
   ( App(..), AttrMap, BrickEvent(..), EventM, Next, Widget
@@ -42,7 +54,7 @@ data Tick = Tick
 -- if we call this "Name" now.
 type Name = ()
 
-data Cell = Snake | Food | Empty
+data Cell = Ship | Rock | Empty
 
 -- App definition
 
@@ -109,20 +121,21 @@ drawGameOver dead =
 
 drawGrid :: Game -> Widget Name
 drawGrid g = withBorderStyle BS.unicodeBold
-  $ B.borderWithLabel (str "Snake")
+  $ B.borderWithLabel (str "Ship")
   $ vBox rows
   where
     rows         = [hBox $ cellsInRow r | r <- [height-1,height-2..0]]
-    cellsInRow y = [drawCoord (V2 x y) | x <- [0..width-1]]
+    cellsInRow y = [drawCoord (x, y) | x <- [0..width-1]]
     drawCoord    = drawCell . cellAt
     cellAt c
-      | c `elem` g ^. snake = Snake
-      | c == g ^. food      = Food
+      | c `elem` g ^. ship = Ship
+      | (c, 1) `elem` (g ^. rocks) = Rock
+      | (c, 0) `elem` (g ^. rocks) = Rock
       | otherwise           = Empty
 
 drawCell :: Cell -> Widget Name
-drawCell Snake = withAttr snakeAttr cw
-drawCell Food  = withAttr foodAttr cw
+drawCell Ship = withAttr snakeAttr cw
+drawCell Rock  = withAttr rockAttr cw
 drawCell Empty = withAttr emptyAttr cw
 
 cw :: Widget Name
@@ -131,14 +144,14 @@ cw = str "  "
 theMap :: AttrMap
 theMap = attrMap V.defAttr
   [ (snakeAttr, V.blue `on` V.blue)
-  , (foodAttr, V.red `on` V.red)
+  , (rockAttr, V.red `on` V.red)
   , (gameOverAttr, fg V.red `V.withStyle` V.bold)
   ]
 
 gameOverAttr :: AttrName
 gameOverAttr = "gameOver"
 
-snakeAttr, foodAttr, emptyAttr :: AttrName
+snakeAttr, rockAttr, emptyAttr :: AttrName
 snakeAttr = "snakeAttr"
-foodAttr = "foodAttr"
+rockAttr = "rockAttr"
 emptyAttr = "emptyAttr"
