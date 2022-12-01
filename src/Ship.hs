@@ -152,7 +152,7 @@ turn d g@Game { _ship = s } = checkIfTop(g & ship .~ moveShip d s)
 
 
 checkIfTop:: Game -> Game
-checkIfTop g@Game{_ship = (x,y):xs} = if y >= height then updateScore(resetShip g) else g
+checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore(resetShip g) else g
 checkIfTop _ = error "Ship can't be empty!"
 
 updateScore:: Game -> Game
