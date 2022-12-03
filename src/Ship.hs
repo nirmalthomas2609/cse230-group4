@@ -5,9 +5,10 @@ module Ship
   ( initGame
   , step
   , turn
+  , decrementTimer
   , Game(..)
   , Direction(..)
-  , dead, rocks, score, ship
+  , dead, rocks, score, ship, time
   , height, width, Coord
   ) where
 
@@ -30,6 +31,7 @@ data Game = Game
   , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of random next food locations
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
+  , _time   :: Int
   } deriving (Show)
 
 type Coord = (Int, Int)
@@ -116,6 +118,7 @@ addRocksAtRandom = do
 resetShip :: Game -> Game
 resetShip g = g & ship .~ startingCoords
 
+-- pauseShip 
 die :: Game -> Game
 die g@Game {_ship = s, _rocks = rss}
   | hasCollidedRocks s rss  = resetScore (resetShip g)
@@ -143,18 +146,29 @@ moveShip :: Direction -> Ship -> Ship
 moveShip d s = map (directionStep d) s
 
 turn :: Direction -> Game -> Game
-turn d g@Game { _ship = s } = checkIfTop(g & ship .~ moveShip d s)
-
+turn d g@Game { _ship = s } = checkIfTop(if ((g ^. dead) == False)  then g & ship .~ moveShip d s else g)
 
 checkIfTop:: Game -> Game
 checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore(resetShip g) else g
 checkIfTop _ = error "Ship can't be empty!"
+
+-- increaseSpeed:: Game -> Game
 
 updateScore :: Game -> Game
 updateScore g@Game { _score = s} = g & score .~ (s + 1)
 
 resetScore :: Game -> Game
 resetScore g = g & score .~ 0
+
+setGameOver :: Game -> Game
+setGameOver g@Game { _time = t }
+  | t == 0    = g & dead .~ True
+  | otherwise = g
+
+decrementTimer :: Game -> Game
+decrementTimer g@Game { _time = t, _dead = d}
+  | d == True   = g
+  | otherwise   = setGameOver (g & time .~ (t - 1))
 
 initGame :: IO Game
 initGame = do
@@ -168,6 +182,7 @@ initGame = do
         , _rockGenerator  = fs
         , _score  = 0
         , _dead   = False
+        , _time   = 60
         }
   return g
 

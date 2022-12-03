@@ -13,11 +13,13 @@ import Ship
       dead,
       rocks,
       score,
+      time,
       ship,
       height,
       width,
       step,
       turn,
+      decrementTimer,
       initGame )
 
 import Brick
@@ -46,7 +48,7 @@ import Linear.V2 (V2(..))
 -- | Ticks mark passing of time
 --
 -- This is our custom event that will be constantly fed into the app.
-data Tick = Tick
+data Tick = Tick | Timer | SpeedUp
 
 -- | Named resources
 --
@@ -66,12 +68,25 @@ app = App { appDraw = drawUI
           , appAttrMap = const theMap
           }
 
+-- createTickThread :: Int -> BChan a -> IO ThreadId
+-- createTickThread delay chan = forkIO $ forever $ do { writeBChan chan Tick; threadDelay delay;}                                               
+
+-- deployTickThread :: IO ThreadId -> IO ()
+-- deployTickThread tickThread = do
+
 main :: IO ()
 main = do
   chan <- newBChan 10
+  -- timerChan <- newBChan 10
+
   forkIO $ forever $ do
+    writeBChan chan Timer
+    threadDelay 1000000 -- decides how fast your game moves
+
+  tickID <- forkIO $ forever $ do
     writeBChan chan Tick
-    threadDelay 50000 -- decides how fast your game moves
+    threadDelay 100000 -- decides how fast your game moves
+  
   g <- initGame
   let builder = V.mkVty V.defaultConfig
   initialVty <- builder
@@ -81,6 +96,7 @@ main = do
 
 handleEvent :: Game -> BrickEvent Name Tick -> EventM Name (Next Game)
 handleEvent g (AppEvent Tick)                       = continue $ step g
+handleEvent g (AppEvent Timer)                      = continue $ decrementTimer g
 handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ turn North g 
 handleEvent g (VtyEvent (V.EvKey V.KDown []))       = continue $ turn South g
 handleEvent g (VtyEvent (V.EvKey V.KRight []))      = continue $ turn East g
@@ -103,12 +119,20 @@ drawUI g =
 drawStats :: Game -> Widget Name
 drawStats g = hLimit 11
   $ vBox [ drawScore (g ^. score)
+         , drawTimer (g ^. time)
          , padTop (Pad 2) $ drawGameOver (g ^. dead)
          ]
 
 drawScore :: Int -> Widget Name
 drawScore n = withBorderStyle BS.unicodeBold
   $ B.borderWithLabel (str "Score")
+  $ C.hCenter
+  $ padAll 1
+  $ str $ show n
+
+drawTimer :: Int -> Widget Name
+drawTimer n = withBorderStyle BS.unicodeBold
+  $ B.borderWithLabel (str "imer")
   $ C.hCenter
   $ padAll 1
   $ str $ show n
