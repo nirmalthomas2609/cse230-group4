@@ -32,6 +32,8 @@ data Game = Game
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
   , _time   :: Int
+  , _ticksElapsed :: Int
+  , _speedFactor :: Int
   } deriving (Show)
 
 type Coord = (Int, Int)
@@ -120,13 +122,19 @@ resetShip g = g & ship .~ startingCoords
 
 -- pauseShip 
 die :: Game -> Game
-die g@Game {_ship = s, _rocks = rss}
-  | hasCollidedRocks s rss  = resetScore (resetShip g)
+die g@Game {_ship = s, _rocks = rss, _dead = d}
+  | d == True               = g
+  | hasCollidedRocks s rss  = updateScore (resetShip g) (-1)
   | otherwise               = g
 
--- movesSpace, die, addRocksAtRandom
+updateSpace :: Game -> Game
+updateSpace g@Game { _rocks = rrs, _ticksElapsed = te, _speedFactor = sp }
+  | (te `mod` sp) == 0  = execState addRocksAtRandom (moveSpace g)
+  | otherwise           = g
+
+-- increments Ticks, movesSpace, die, addRocksAtRandom
 step :: Game -> Game
-step g = execState addRocksAtRandom (moveSpace (die g))
+step g = updateSpace (die (incrementTicksElapsed g))
 -- step s = flip execState s . runMaybeT $ do
 --   s_ = moveSpace s
 --   -- Make sure the game isn't paused or over
@@ -134,6 +142,9 @@ step g = execState addRocksAtRandom (moveSpace (die g))
 
 --   -- die (moved into boundary), eat (moved into food), or move (move into space)
 --   die <|> MaybeT (Just <$> modify move)
+
+incrementTicksElapsed :: Game -> Game
+incrementTicksElapsed g@Game { _ticksElapsed = te } = g & ticksElapsed .~ (te + 1)
 
 directionStep :: Direction -> Coord -> Coord
 directionStep d (x,y)
@@ -149,13 +160,14 @@ turn :: Direction -> Game -> Game
 turn d g@Game { _ship = s } = checkIfTop(if ((g ^. dead) == False)  then g & ship .~ moveShip d s else g)
 
 checkIfTop:: Game -> Game
-checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore(resetShip g) else g
+checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore (resetShip g) 1 else g
 checkIfTop _ = error "Ship can't be empty!"
 
--- increaseSpeed:: Game -> Game
+updateSpeed :: Game -> Int -> Game
+updateSpeed g@Game { _speedFactor = sp } v = g & speedFactor .~ (max (min (if v>0 then (sp `div` (2^v)) else (sp * (2^(-v)))) 10) 1)
 
-updateScore :: Game -> Game
-updateScore g@Game { _score = s} = g & score .~ (s + 1)
+updateScore :: Game -> Int -> Game
+updateScore g@Game { _score = s} v = updateSpeed (g & score .~ (max (s + v) 0)) v
 
 resetScore :: Game -> Game
 resetScore g = g & score .~ 0
@@ -183,6 +195,8 @@ initGame = do
         , _score  = 0
         , _dead   = False
         , _time   = 60
+        , _ticksElapsed  = 0
+        , _speedFactor   = 10
         }
   return g
 
