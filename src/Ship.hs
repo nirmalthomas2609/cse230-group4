@@ -3,6 +3,7 @@
 {-# LANGUAGE TemplateHaskell #-}
 module Ship
   ( initGame
+  , initMenu
   , step
   , turn
   , decrementTimer
@@ -198,6 +199,12 @@ initGame = do
         , _ticksElapsed  = 0
         , _speedFactor   = 10
         }
+  return g
+
+initMenu :: IO Game
+initMenu = do
+  let
+      g  = Game {}
   return g
 
 fromList :: [a] -> Stream a
