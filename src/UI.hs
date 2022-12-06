@@ -199,9 +199,10 @@ cw = str "  "
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-  [ (snakeAttr, V.blue `on` V.blue)
-  , (rockAttr, V.red `on` V.red)
+  [ (snakeAttr, V.yellow `on` V.yellow)
+  , (rockAttr, V.white `on` V.white)
   , (gameOverAttr, fg V.red `V.withStyle` V.bold)
+  , (emptyAttr, V.black `on` V.black)
   ]
 
 gameOverAttr :: AttrName

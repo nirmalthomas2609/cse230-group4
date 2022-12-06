@@ -172,7 +172,7 @@ checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore (resetSh
 checkIfTop _ = error "Ship can't be empty!"
 
 updateSpeed :: Game -> Int -> Game
-updateSpeed g@Game { _speedFactor = sp } v = g & speedFactor .~ (max (min (if v>0 then (sp `div` (2^v)) else (sp * (2^(-v)))) 10) 1)
+updateSpeed g@Game { _speedFactor = sp } v = g & speedFactor .~ (max (sp-1) 1)
 
 updateScore :: Game -> Int -> Game
 updateScore g@Game { _score = s} v = updateSpeed (g & score .~ (max (s + v) 0)) v
