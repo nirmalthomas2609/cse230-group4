@@ -9,7 +9,8 @@ module Ship
   , decrementTimer
   , Game(..)
   , Direction(..)
-  , dead, rocks, score, ship, time
+  , dead, rocks, score, ship, time, endState
+  , endGame
   , height, width, Coord
   ) where
 
@@ -27,14 +28,15 @@ import Linear.V2 (V2(..), _x, _y)
 import System.Random (Random(..), newStdGen, mkStdGen)
 
 data Game = Game
-  { _ship  :: Ship        -- ^ Ship as a sequence of points in N2
-  , _rocks   :: [Rock]        -- ^ location of the rock
-  , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of rocks
+  { _ship  :: Ship        -- ^ snake as a sequence of points in N2
+  , _rocks   :: [Rock]        -- ^ location of the food
+  , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of random next food locations
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
   , _time   :: Int
   , _ticksElapsed :: Int
   , _speedFactor :: Int
+  , _endState :: Int
   } deriving (Show)
 
 type Coord = (Int, Int)
@@ -90,13 +92,6 @@ moveRocks []                = []
 moveRocks (((x, y), 0):rs)  = ((x+1, y), 0):moveRocks rs
 moveRocks (((x, y), 1):rs)  = ((x-1, y), 1):moveRocks rs
 
-moveShipDefault :: Ship -> Ship
-moveShipDefault []        = []
-moveShipDefault ((x,y):ss)  = (x,y+1):moveShipDefault ss 
-
-moveDefault :: Game -> Game
-moveDefault g@Game { _ship = s} = g & ship .~ (moveShipDefault s)
-
 moveSpace :: Game -> Game
 moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks (moveRocks rrs))
 
@@ -148,6 +143,7 @@ step g = updateSpace (die (incrementTicksElapsed g))
 --   -- Make sure the game isn't paused or over
 --   MaybeT $ guard . not <$> orM [use dead]
 
+--   -- die (moved into boundary), eat (moved into food), or move (move into space)
 --   die <|> MaybeT (Just <$> modify move)
 
 incrementTicksElapsed :: Game -> Game
@@ -171,7 +167,7 @@ checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore (resetSh
 checkIfTop _ = error "Ship can't be empty!"
 
 updateSpeed :: Game -> Int -> Game
-updateSpeed g@Game { _speedFactor = sp } v = g & speedFactor .~ (max (sp-1) 1)
+updateSpeed g@Game { _speedFactor = sp } v = g & speedFactor .~ (min (max (sp-v) 2) 8)
 
 updateScore :: Game -> Int -> Game
 updateScore g@Game { _score = s} v = updateSpeed (g & score .~ (max (s + v) 0)) v
@@ -189,6 +185,9 @@ decrementTimer g@Game { _time = t, _dead = d}
   | d == True   = g
   | otherwise   = setGameOver (g & time .~ (t - 1))
 
+endGame :: Game -> Int -> Game
+endGame g t = g & endState .~ t
+
 initGame :: IO Game
 initGame = do
   (f :| fs) <-
@@ -203,14 +202,16 @@ initGame = do
         , _dead   = False
         , _time   = 60
         , _ticksElapsed  = 0
-        , _speedFactor   = 10
+        , _speedFactor   = 8
         }
   return g
 
 initMenu :: IO Game
 initMenu = do
   let
-      g  = Game {}
+      g  = Game {
+        _endState = 0
+      }
   return g
 
 fromList :: [a] -> Stream a
