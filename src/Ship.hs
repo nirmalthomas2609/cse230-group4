@@ -87,8 +87,15 @@ killRocks [] = []
 
 moveRocks :: [Rock] -> [Rock]
 moveRocks []                = []
-moveRocks (((x, y), 0):rs)  = ((x+1, y), 0):moveRocks rs
-moveRocks (((x, y), 1):rs)  = ((x-1, y), 1):moveRocks rs
+moveRocks (((x, y), 0):rs)  = ((x+1, y-1), 0):moveRocks rs
+moveRocks (((x, y), 1):rs)  = ((x-1, y-1), 1):moveRocks rs
+
+moveShipDefault :: Ship -> Ship
+moveShipDefault []        = []
+moveShipDefault ((x,y):ss)  = (x,y+1):moveShipDefault ss 
+
+moveDefault :: Game -> Game
+moveDefault g@Game { _ship = s} = g & ship .~ (moveShipDefault s)
 
 moveSpace :: Game -> Game
 moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks (moveRocks rrs))
