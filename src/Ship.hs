@@ -27,9 +27,9 @@ import Linear.V2 (V2(..), _x, _y)
 import System.Random (Random(..), newStdGen, mkStdGen)
 
 data Game = Game
-  { _ship  :: Ship        -- ^ snake as a sequence of points in N2
-  , _rocks   :: [Rock]        -- ^ location of the food
-  , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of random next food locations
+  { _ship  :: Ship        -- ^ Ship as a sequence of points in N2
+  , _rocks   :: [Rock]        -- ^ location of the rock
+  , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of rocks
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
   , _time   :: Int
@@ -87,8 +87,8 @@ killRocks [] = []
 
 moveRocks :: [Rock] -> [Rock]
 moveRocks []                = []
-moveRocks (((x, y), 0):rs)  = ((x+1, y-1), 0):moveRocks rs
-moveRocks (((x, y), 1):rs)  = ((x-1, y-1), 1):moveRocks rs
+moveRocks (((x, y), 0):rs)  = ((x+1, y), 0):moveRocks rs
+moveRocks (((x, y), 1):rs)  = ((x-1, y), 1):moveRocks rs
 
 moveShipDefault :: Ship -> Ship
 moveShipDefault []        = []
@@ -148,7 +148,6 @@ step g = updateSpace (die (incrementTicksElapsed g))
 --   -- Make sure the game isn't paused or over
 --   MaybeT $ guard . not <$> orM [use dead]
 
---   -- die (moved into boundary), eat (moved into food), or move (move into space)
 --   die <|> MaybeT (Just <$> modify move)
 
 incrementTicksElapsed :: Game -> Game

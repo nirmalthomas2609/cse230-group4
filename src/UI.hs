@@ -190,7 +190,7 @@ drawGrid g = withBorderStyle BS.unicodeBold
       | otherwise           = Empty
 
 drawCell :: Cell -> Widget Name
-drawCell Ship = withAttr snakeAttr cw
+drawCell Ship = withAttr shipAttr cw
 drawCell Rock  = withAttr rockAttr cw
 drawCell Empty = withAttr emptyAttr cw
 
@@ -199,7 +199,7 @@ cw = str "  "
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-  [ (snakeAttr, V.yellow `on` V.yellow)
+  [ (shipAttr, V.yellow `on` V.yellow)
   , (rockAttr, V.white `on` V.white)
   , (gameOverAttr, fg V.red `V.withStyle` V.bold)
   , (emptyAttr, V.black `on` V.black)
@@ -208,7 +208,7 @@ theMap = attrMap V.defAttr
 gameOverAttr :: AttrName
 gameOverAttr = "gameOver"
 
-snakeAttr, rockAttr, emptyAttr :: AttrName
-snakeAttr = "snakeAttr"
+shipAttr, rockAttr, emptyAttr :: AttrName
+shipAttr = "shipAttr"
 rockAttr = "rockAttr"
 emptyAttr = "emptyAttr"
