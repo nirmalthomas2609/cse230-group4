@@ -94,7 +94,7 @@ main = do
 
   tickID <- forkIO $ forever $ do
     writeBChan chan Tick
-    threadDelay 1 -- decides how fast your game moves
+    threadDelay 10000 -- decides how fast your game moves
 
   m <- initMenu
   let builderMenu = V.mkVty V.defaultConfig
@@ -199,9 +199,10 @@ cw = str "  "
 
 theMap :: AttrMap
 theMap = attrMap V.defAttr
-  [ (snakeAttr, V.blue `on` V.blue)
-  , (rockAttr, V.red `on` V.red)
+  [ (snakeAttr, V.yellow `on` V.yellow)
+  , (rockAttr, V.white `on` V.white)
   , (gameOverAttr, fg V.red `V.withStyle` V.bold)
+  , (emptyAttr, V.black `on` V.black)
   ]
 
 gameOverAttr :: AttrName
