@@ -87,14 +87,14 @@ appM = App { appDraw = drawUIMenu
 
 main :: IO ()
 main = do
-  chan <- newBChan 10
+  chan <- newBChan 100
   forkIO $ forever $ do
     writeBChan chan Timer
     threadDelay 1000000 -- decides how fast your game moves
 
-  tickID <- forkIO $ forever $ do
+  forkIO $ forever $ do
     writeBChan chan Tick
-    threadDelay 1 -- decides how fast your game moves
+    threadDelay 20 -- decides how fast your game moves
 
   m <- initMenu
   let builderMenu = V.mkVty V.defaultConfig
