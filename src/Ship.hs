@@ -75,11 +75,11 @@ nextRocks = do
   return ()
 
 isRockEnd :: Rock -> Bool
-isRockEnd ((0, _), 1)       = True
+isRockEnd ((0, _), 1) = True
 isRockEnd ((x, _), 0)
-  | x == width-1  = True
-  | otherwise   = False
-isRockEnd _                 = False
+  | x == width-1      = True
+  | otherwise         = False
+isRockEnd _           = False
 
 killRocks :: [Rock] -> [Rock]
 killRocks rrs@(r:rs)
@@ -110,7 +110,7 @@ hasCollided [] _            = False
 
 hasCollidedRocks :: Ship -> [Rock] -> Bool
 hasCollidedRocks s (r:rs)   = hasCollided s r || hasCollidedRocks s rs
-hasCollidedRocks s []       = False
+hasCollidedRocks _ []       = False
 
 addRocksAtRandom :: State Game ()
 addRocksAtRandom = do
@@ -157,7 +157,7 @@ directionStep d (x,y)
   | otherwise   = ((x - 1) `mod` width, y)
 
 moveShip :: Direction -> Ship -> Ship
-moveShip d s = map (directionStep d) s
+moveShip d = map (directionStep d)
 
 turn :: Direction -> Game -> Game
 turn _ g@Game { _dead = True} = g
@@ -210,7 +210,7 @@ initGame = do
         , _rockGenerator  = fs
         , _score  = 0
         , _dead   = False
-        , _time   = 10
+        , _time   = 60
         , _ticksElapsed  = 0
         , _speedFactor   = 8
         }
