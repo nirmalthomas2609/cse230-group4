@@ -6,14 +6,35 @@ build-type:          Simple
 cabal-version:       >=1.10
 extra-source-files:  README.md
 
-executable ship
+Library
+  ghc-options:        -W -fdefer-typed-holes
+  exposed-modules:    UI
+                    , Ship
+
+  Default-Extensions: OverloadedStrings
+
+  build-depends:       base         
+                     , brick
+                     , filepath
+                     , directory
+                     , containers
+                     , extra
+                     , linear
+                     , lens
+                     , random
+                     , transformers
+                     , vty
+                     , QuickCheck
+
   hs-source-dirs:      src
-  other-modules:       UI
-                     , Ship
-  main-is:             Main.hs
-  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
-  build-depends:       base         >= 4.7 && < 5
+
+executable ship
+  main-is:             src/Main.hs
+  ghc-options:         -threaded -rtsopts -with-rtsopts=-N
+  Default-Extensions:  OverloadedStrings
+  default-language:    Haskell2010
+  build-depends:       base        
                      , brick
                      , containers
                      , extra
@@ -22,3 +43,24 @@ executable ship
                      , random
                      , transformers
                      , vty
+                     , QuickCheck
+                     , ship
+
+test-suite test
+  hs-source-dirs:      test
+  default-language:    Haskell2010
+  type:                exitcode-stdio-1.0
+  main-is:             Test.hs
+  Default-Extensions:  OverloadedStrings
+  build-depends:       base         
+                      , brick
+                      , filepath
+                      , directory
+                      , containers
+                      , QuickCheck
+                      , tasty
+                      , tasty-hunit
+                      , tasty-quickcheck
+                      , process
+                      , ship
+  other-modules:    Common 
