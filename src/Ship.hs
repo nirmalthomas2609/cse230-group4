@@ -8,6 +8,7 @@ module Ship
   , turn
   , decrementTimer
   , isRockEnd
+  , hasCollided
   , Game(..)
   , Direction(..)
   , dead, rocks, score, ship, time, endState
