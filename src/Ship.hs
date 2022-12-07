@@ -106,7 +106,7 @@ startingCoords = [(cx,cy),(cx-1,cy-1),(cx-1,cy-2),(cx+1,cy-1),(cx+1,cy-2)]
                         cy  = 3
 
 rockProducer :: V2 Int -> Rock
-rockProducer (V2 0 x) = ((0, x), 0)
+rockProducer (V2 1 x) = ((0, x), 0)
 rockProducer (V2 _ x) = ((width - 1, x), 1)
 
 hasCollided :: Ship -> Rock -> Bool
@@ -206,7 +206,7 @@ endGame g t = g & endState .~ t
 initGame :: IO Game
 initGame = do
   (f :| fs) <-
-    fromList . randomRs (V2 1 5, V2 1 height-1) <$> newStdGen
+    fromList . randomRs (V2 0 5, V2 2 height-1) <$> newStdGen
   let xm = width `div` 2
       ym = height `div` 2
       g  = Game
