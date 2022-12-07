@@ -12,9 +12,9 @@ module Ship
   , isRockEnd
   , resetScore
   , hasCollided
-  , _score
+  , _score, killRocks
   , Direction(..)
-  , dead, rocks, score, ship, time, endState
+  , dead, rocks, score, ship, time, endState, updateScore
   , endGame
   , height, width, Coord
   ) where
@@ -42,7 +42,7 @@ data Game = Game
   , _ticksElapsed :: Int
   , _speedFactor :: Int
   , _endState :: Int
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 type Coord = (Int, Int)
 
@@ -51,7 +51,7 @@ type Rock = (Coord, Int)
 type Ship = [Coord]
 
 data Stream a = a :| Stream a
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Direction
   = North
@@ -80,9 +80,11 @@ nextRocks = do
   return ()
 
 isRockEnd :: Rock -> Bool
-isRockEnd ((0, _), 1) = True
+isRockEnd ((x, _), 1)
+  | x <= 0 = True
+  | otherwise = False
 isRockEnd ((x, _), 0)
-  | x == width-1      = True
+  | x >= width-1      = True
   | otherwise         = False
 isRockEnd _           = False
 
