@@ -9,6 +9,7 @@ module Ship
   , decrementTimer
   , isRockEnd
   , hasCollided
+  , rockProducer
   , Game(..)
   , Direction(..)
   , dead, rocks, score, ship, time, endState

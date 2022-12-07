@@ -19,6 +19,7 @@ import Ship ( Direction(West, North, South, East),
       step,
       turn,
       decrementTimer,
+      rockProducer,
       initGame,
       initMenu,
       endGame )
@@ -47,3 +48,8 @@ testHasCollided sc = testGroup "HasCollided" [
     where
         scoreTest :: (Show b, Eq b) => (a -> b, a, b, Int, String) -> TestTree
         scoreTest (f, x, r, n, msg) = scoreTest' sc (return . f, x, r, n, msg)
+
+testRockProducer :: Score -> TestTree
+testRockProducer sc = testGroup "RockProducer" [
+    scoreTest ((\_ -> rockProducer), (V2 0 1), ((0, 1), 0), 1, "RP-1")
+    ]
