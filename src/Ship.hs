@@ -9,6 +9,7 @@ module Ship
   , step
   , turn
   , decrementTimer
+  , _rockGenerator
   , isRockEnd
   , resetScore
   , hasCollided
@@ -35,7 +36,7 @@ import System.Random (Random(..), newStdGen, mkStdGen)
 data Game = Game
   { _ship  :: Ship        -- ^ snake as a sequence of points in N2
   , _rocks   :: [Rock]        -- ^ location of the food
-  , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of random next food locations
+  , _rockGenerator  :: [(V2 Int)] -- ^ infinite list of random next food locations
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
   , _time   :: Int
@@ -71,13 +72,8 @@ width = 45
 updateRockState :: Game -> Rock -> Game
 updateRockState g@Game {_rocks = rrs} s = g & rocks .~ (rrs ++ [s])
 
-nextRocks :: State Game ()
-nextRocks = do
-  (f :| fs) <- use rockGenerator
-  rockGenerator .= fs
-  currGameState <- get
-  put (updateRockState currGameState $ rockProducer f)
-  return ()
+nextRocks :: Game -> Game
+nextRocks g@Game { _rockGenerator = r:rs } = updateRockState (g & rockGenerator .~ rs) (rockProducer r)
 
 isRockEnd :: Rock -> Bool
 isRockEnd ((x, _), 1)
@@ -119,13 +115,9 @@ hasCollidedRocks :: Ship -> [Rock] -> Bool
 hasCollidedRocks s (r:rs)   = hasCollided s r || hasCollidedRocks s rs
 hasCollidedRocks _ []       = False
 
-addRocksAtRandom :: State Game ()
-addRocksAtRandom = do
-    (f :| fs) <- use rockGenerator
-    rockGenerator .= fs
-    case f of
-      (V2 0 _) -> return ()
-      _        -> nextRocks
+addRocksAtRandom :: Game -> Game
+addRocksAtRandom g@Game { _rockGenerator = (V2 0 _):rs }  = g & rockGenerator .~ rs
+addRocksAtRandom g@Game { _rockGenerator = _:rs }         = nextRocks $ g & rockGenerator .~ rs
 
 resetShip :: Game -> Game
 resetShip g = g & ship .~ startingCoords
@@ -133,25 +125,17 @@ resetShip g = g & ship .~ startingCoords
 -- pauseShip 
 die :: Game -> Game
 die g@Game {_ship = s, _rocks = rss, _dead = d}
-  | d == True               = g
+  | d                       = g
   | hasCollidedRocks s rss  = updateSpeed (-1) $ updateScore (-1) $ resetShip g
   | otherwise               = g
 
 updateSpace :: Game -> Game
 updateSpace g@Game { _rocks = rrs, _ticksElapsed = te, _speedFactor = sp }
-  | (te `mod` sp) == 0  = execState addRocksAtRandom $ moveSpace g
+  | (te `mod` sp) == 0  = addRocksAtRandom $ moveSpace g --execState addRocksAtRandom $ moveSpace g
   | otherwise           = g
 
--- increments Ticks, movesSpace, die, addRocksAtRandom
 step :: Game -> Game
 step g = updateSpace $ die $ incrementTicksElapsed g
--- step s = flip execState s . runMaybeT $ do
---   s_ = moveSpace s
---   -- Make sure the game isn't paused or over
---   MaybeT $ guard . not <$> orM [use dead]
-
---   -- die (moved into boundary), eat (moved into food), or move (move into space)
---   die <|> MaybeT (Just <$> modify move)
 
 incrementTicksElapsed :: Game -> Game
 incrementTicksElapsed g@Game { _ticksElapsed = te } = g & ticksElapsed .~ (te + 1)
@@ -179,10 +163,6 @@ checkIfTopB ((x,y):_)
   | y >= height-1 = True
   | otherwise     = False
 
--- checkIfTop:: Game -> Game
--- checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateSpeed 1 $ updateScore 1 $ resetShip g else g
--- checkIfTop _ = error "Ship can't be empty!"
-
 updateSpeed :: Int -> Game -> Game
 updateSpeed v g@Game { _speedFactor = sp } = g & speedFactor .~ (min 8 $ max 2 $ sp-v)
 
@@ -193,13 +173,12 @@ resetScore :: Game -> Game
 resetScore g = g & score .~ 0
 
 setGameOver :: Game -> Game
-setGameOver g@Game { _time = t }
-  | t == 0    = g & dead .~ True
-  | otherwise = g
+setGameOver g@Game { _time = 0 }  = g & dead .~ True
+setGameOver g                     = g
 
 decrementTimer :: Game -> Game
 decrementTimer g@Game { _time = t, _dead = d}
-  | d == True   = g
+  | d           = g
   | otherwise   = setGameOver $ g & time .~ (t - 1)
 
 endGame :: Game -> Int -> Game
@@ -207,8 +186,8 @@ endGame g t = g & endState .~ t
 
 initGame :: IO Game
 initGame = do
-  (f :| fs) <-
-    fromList . randomRs (V2 0 5, V2 2 height-1) <$> newStdGen
+  (f : fs) <-
+    randomRs (V2 0 5, V2 2 height-1) <$> newStdGen
   let xm = width `div` 2
       ym = height `div` 2
       g  = Game
@@ -217,7 +196,7 @@ initGame = do
         , _rockGenerator  = fs
         , _score  = 0
         , _dead   = False
-        , _time   = 60
+        , _time   = 15
         , _ticksElapsed  = 0
         , _speedFactor   = 8
         }

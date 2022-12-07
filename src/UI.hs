@@ -23,7 +23,8 @@ import Ship
       decrementTimer,
       initGame,
       initMenu,
-      endGame )
+      endGame,
+      _rockGenerator )
 
 import Brick
   ( App(..), AttrMap, BrickEvent(..), EventM, Next, Widget
@@ -78,7 +79,7 @@ main = do
 
   forkIO $ forever $ do
     writeBChan chan Tick
-    threadDelay 20 
+    threadDelay 20
 
   m <- initMenu
   let builderMenu = V.mkVty V.defaultConfig
@@ -91,7 +92,8 @@ main = do
       let builder = V.mkVty V.defaultConfig
       initialVty <- builder
       g <- initGame
-      void $ customMain initialVty builder (Just chan) app g
+      g <- customMain initialVty builder (Just chan) app g
+      putStrLn (show (take 20 (_rockGenerator g)))
     else
       return ()
 
