@@ -126,7 +126,7 @@ resetShip g = g & ship .~ startingCoords
 -- pauseShip 
 die :: Game -> Game
 die g@Game {_ship = s, _rocks = rss, _dead = d}
-  | d == True               = g
+  | d                       = g
   | hasCollidedRocks s rss  = updateSpeed (-1) $ updateScore (-1) $ resetShip g
   | otherwise               = g
 
@@ -186,13 +186,12 @@ resetScore :: Game -> Game
 resetScore g = g & score .~ 0
 
 setGameOver :: Game -> Game
-setGameOver g@Game { _time = t }
-  | t == 0    = g & dead .~ True
-  | otherwise = g
+setGameOver g@Game { _time = 0 }  = g & dead .~ True
+setGameOver g                     = g
 
 decrementTimer :: Game -> Game
 decrementTimer g@Game { _time = t, _dead = d}
-  | d == True   = g
+  | d           = g
   | otherwise   = setGameOver $ g & time .~ (t - 1)
 
 endGame :: Game -> Int -> Game
@@ -210,7 +209,7 @@ initGame = do
         , _rockGenerator  = fs
         , _score  = 0
         , _dead   = False
-        , _time   = 60
+        , _time   = 15
         , _ticksElapsed  = 0
         , _speedFactor   = 8
         }

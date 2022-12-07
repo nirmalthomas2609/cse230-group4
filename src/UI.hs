@@ -78,7 +78,7 @@ main = do
 
   forkIO $ forever $ do
     writeBChan chan Tick
-    threadDelay 20 
+    threadDelay 20
 
   m <- initMenu
   let builderMenu = V.mkVty V.defaultConfig
