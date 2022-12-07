@@ -2,15 +2,20 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Ship
-  ( initGame
+  ( 
+  Game(..) 
+  , initGame
   , initMenu
   , step
   , turn
   , decrementTimer
   , _rockGenerator
-  , Game(..)
+  , isRockEnd
+  , resetScore
+  , hasCollided
+  , _score, killRocks
   , Direction(..)
-  , dead, rocks, score, ship, time, endState
+  , dead, rocks, score, ship, time, endState, updateScore
   , endGame
   , height, width, Coord
   ) where
@@ -38,7 +43,7 @@ data Game = Game
   , _ticksElapsed :: Int
   , _speedFactor :: Int
   , _endState :: Int
-  } deriving (Show)
+  } deriving (Show, Eq)
 
 type Coord = (Int, Int)
 
@@ -47,7 +52,7 @@ type Rock = (Coord, Int)
 type Ship = [Coord]
 
 data Stream a = a :| Stream a
-  deriving (Show)
+  deriving (Show, Eq)
 
 data Direction
   = North
@@ -71,9 +76,11 @@ nextRocks :: Game -> Game
 nextRocks g@Game { _rockGenerator = r:rs } = updateRockState (g & rockGenerator .~ rs) (rockProducer r)
 
 isRockEnd :: Rock -> Bool
-isRockEnd ((0, _), 1) = True
+isRockEnd ((x, _), 1)
+  | x <= 0 = True
+  | otherwise = False
 isRockEnd ((x, _), 0)
-  | x == width-1      = True
+  | x >= width-1      = True
   | otherwise         = False
 isRockEnd _           = False
 
@@ -97,7 +104,7 @@ startingCoords = [(cx,cy),(cx-1,cy-1),(cx-1,cy-2),(cx+1,cy-1),(cx+1,cy-2)]
                         cy  = 3
 
 rockProducer :: V2 Int -> Rock
-rockProducer (V2 0 x) = ((0, x), 0)
+rockProducer (V2 1 x) = ((0, x), 0)
 rockProducer (V2 _ x) = ((width - 1, x), 1)
 
 hasCollided :: Ship -> Rock -> Bool
@@ -155,10 +162,6 @@ checkIfTopB :: Ship -> Bool
 checkIfTopB ((x,y):_)
   | y >= height-1 = True
   | otherwise     = False
-
--- checkIfTop:: Game -> Game
--- checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateSpeed 1 $ updateScore 1 $ resetShip g else g
--- checkIfTop _ = error "Ship can't be empty!"
 
 updateSpeed :: Int -> Game -> Game
 updateSpeed v g@Game { _speedFactor = sp } = g & speedFactor .~ (min 8 $ max 2 $ sp-v)
