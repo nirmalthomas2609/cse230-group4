@@ -70,18 +70,6 @@ updateRockState g@Game {_rocks = rrs} s = g & rocks .~ (rrs ++ [s])
 nextRocks :: Game -> Game
 nextRocks g@Game { _rockGenerator = r:rs } = updateRockState (g & rockGenerator .~ rs) (rockProducer r)
 
--- nextRocks :: State Game ()
--- nextRocks = do
---   rg <- use rockGenerator
---   let f = head (rg)
---   let fs = tail (rg)
---   currGame <- get
---   put (currGame & rockGenerator .~ fs)
---   -- put (currGame)
---   currGameState <- get
---   put (updateRockState currGameState $ rockProducer f)
---   return ()
-
 isRockEnd :: Rock -> Bool
 isRockEnd ((0, _), 1) = True
 isRockEnd ((x, _), 0)
@@ -123,17 +111,6 @@ hasCollidedRocks _ []       = False
 addRocksAtRandom :: Game -> Game
 addRocksAtRandom g@Game { _rockGenerator = (V2 0 _):rs }  = g & rockGenerator .~ rs
 addRocksAtRandom g@Game { _rockGenerator = _:rs }         = nextRocks $ g & rockGenerator .~ rs
--- addRocksAtRandom :: State Game ()
--- addRocksAtRandom = do
---     rg <- use rockGenerator
---     let f   = head (rg)
---     let fs  = tail (rg)
---     currGame <- get
---     put (currGame & rockGenerator .~ fs)
---     -- put (currGame)
---     case f of
---       (V2 0 _) -> return ()
---       _        -> nextRocks
 
 resetShip :: Game -> Game
 resetShip g = g & ship .~ startingCoords
