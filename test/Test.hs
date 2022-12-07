@@ -44,6 +44,7 @@ unitTests sc = testGroup "List" [
   scoreTest ((\_ -> isRockEnd ((44,4), 0)), (), True, 1, "rockEndCheck3"),
   scoreTest ((\_ -> _score (resetScore (Game {_score = 9}))), (), 0, 1, "resetScore4"),
   scoreTest ((\_ -> length (killRocks [((45, 3), 0), ((46, 0), 0), ((0, 0), 1)])), (), 0, 1, "killRocks1"),
+  scoreTest ((\_ -> length (killRocks [((45, 3), 0), ((46, 0), 0), ((0, 0), 0)])), (), 1, 1, "killRocks2"),
   scoreTest ((\_ -> hasCollided [(0,4),(-1, 4),(-1, 5)] ((-1, 5), 1)), (), True, 1, "Collided-1"),
   scoreTest ((\_ -> hasCollided [(0,4),(-1, 4),(-1, 5),(0, 5)] ((0, 6), 1)), (), False, 1, "Collided-2")
     ]
