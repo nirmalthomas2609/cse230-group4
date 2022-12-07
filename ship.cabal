@@ -22,3 +22,17 @@ executable ship
                      , random
                      , transformers
                      , vty
+                     , QuickCheck
+
+test-suite test
+  hs-source-dirs:      test
+  default-language:    Haskell2010
+  type:                exitcode-stdio-1.0
+  main-is:             Test.hs
+  build-depends:       base         >= 4.7 && < 5
+                      , brick
+                      , containers
+                      , QuickCheck
+                      , tasty
+                      , tasty-hunit
+                      , tasty-quickcheck
