@@ -11,7 +11,7 @@ Spaceforce is a game which involves navigating a space ship through a series of 
     - The score increases by a point and the space ship is reset to the predefined location at the bottom of the screen.
     - The speed of the obstacles increases.
 - Obstacles are generated randomly on the screen from both the left end and the right end of the screen and move horizontally (depending on where the obstacle started off).
-- Every time the space ship hits an obstacle, the space ship is reset to the bottom of the screen to the predefined locatioN and the score of the user decreases by 1.
+- Every time the space ship hits an obstacle, the space ship is reset to the bottom of the screen to the predefined location and the score of the user decreases by 1.
 - Also includes a menu with an option to start the game from the menu and some instructions detailed on how to play the game.
 
 Future features planned for the game:
@@ -45,7 +45,7 @@ The main components of the projects are
 For installation from source follow these steps
 1. Clone the repository using git clone.
 ```shell
-git clone url
+git clone https://github.com/nirmalthomas2609/spaceforce-haskell-brick/tree/main
 ```
 2. Install the required dependencies by running stack install
 ```shell
