@@ -11,6 +11,7 @@ module Ship
   , decrementTimer
   , isRockEnd
   , resetScore
+  , hasCollided
   , _score
   , Direction(..)
   , dead, rocks, score, ship, time, endState
