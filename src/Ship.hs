@@ -7,6 +7,7 @@ module Ship
   , step
   , turn
   , decrementTimer
+  , _rockGenerator
   , Game(..)
   , Direction(..)
   , dead, rocks, score, ship, time, endState
@@ -30,7 +31,7 @@ import System.Random (Random(..), newStdGen, mkStdGen)
 data Game = Game
   { _ship  :: Ship        -- ^ snake as a sequence of points in N2
   , _rocks   :: [Rock]        -- ^ location of the food
-  , _rockGenerator  :: Stream (V2 Int)-- ^ infinite list of random next food locations
+  , _rockGenerator  :: [(V2 Int)] -- ^ infinite list of random next food locations
   , _dead   :: Bool         -- ^ game over flag
   , _score  :: Int          -- ^ score
   , _time   :: Int
@@ -68,8 +69,12 @@ updateRockState g@Game {_rocks = rrs} s = g & rocks .~ (rrs ++ [s])
 
 nextRocks :: State Game ()
 nextRocks = do
-  (f :| fs) <- use rockGenerator
-  rockGenerator .= fs
+  rg <- use rockGenerator
+  let f = head (rg)
+  let fs = tail (rg)
+  currGame <- get
+  put (currGame & rockGenerator .~ fs)
+  -- put (currGame)
   currGameState <- get
   put (updateRockState currGameState $ rockProducer f)
   return ()
@@ -114,8 +119,12 @@ hasCollidedRocks _ []       = False
 
 addRocksAtRandom :: State Game ()
 addRocksAtRandom = do
-    (f :| fs) <- use rockGenerator
-    rockGenerator .= fs
+    rg <- use rockGenerator
+    let f   = head (rg)
+    let fs  = tail (rg)
+    currGame <- get
+    put (currGame & rockGenerator .~ fs)
+    -- put (currGame)
     case f of
       (V2 0 _) -> return ()
       _        -> nextRocks
@@ -135,16 +144,8 @@ updateSpace g@Game { _rocks = rrs, _ticksElapsed = te, _speedFactor = sp }
   | (te `mod` sp) == 0  = execState addRocksAtRandom $ moveSpace g
   | otherwise           = g
 
--- increments Ticks, movesSpace, die, addRocksAtRandom
 step :: Game -> Game
 step g = updateSpace $ die $ incrementTicksElapsed g
--- step s = flip execState s . runMaybeT $ do
---   s_ = moveSpace s
---   -- Make sure the game isn't paused or over
---   MaybeT $ guard . not <$> orM [use dead]
-
---   -- die (moved into boundary), eat (moved into food), or move (move into space)
---   die <|> MaybeT (Just <$> modify move)
 
 incrementTicksElapsed :: Game -> Game
 incrementTicksElapsed g@Game { _ticksElapsed = te } = g & ticksElapsed .~ (te + 1)
@@ -199,8 +200,8 @@ endGame g t = g & endState .~ t
 
 initGame :: IO Game
 initGame = do
-  (f :| fs) <-
-    fromList . randomRs (V2 1 5, V2 1 height-1) <$> newStdGen
+  (f : fs) <-
+    randomRs (V2 0 5, V2 2 height-1) <$> newStdGen
   let xm = width `div` 2
       ym = height `div` 2
       g  = Game
