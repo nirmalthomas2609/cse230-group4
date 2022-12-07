@@ -12,6 +12,7 @@ Spaceforce is a game which involves navigating a space ship through a series of 
     - The speed of the obstacles increases.
 - Obstacles are generated randomly on the screen from both the left end and the right end of the screen and move horizontally (depending on where the obstacle started off).
 - Every time the space ship hits an obstacle, the space ship is reset to the bottom of the screen to the predefined locatioN and the score of the user decreases by 1.
+- Also includes a menu with an option to start the game from the menu and some instructions detailed on how to play the game.
 
 Future features planned for the game:
 - Option to pause the game.
@@ -57,6 +58,8 @@ The unit testing for game are in the test directory. They can run using
 stack test
 ```
 The result should show all tests passed.
+
+- All the tests for the game are included within `test/Test.hs` which includes a list of unit tests and property based tests.
 
 ## Playing the game
 
