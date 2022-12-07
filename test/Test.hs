@@ -2,6 +2,8 @@
 {-# LANGUAGE OverloadedStrings   #-}
 
 import Test.Tasty
+import Test.QuickCheck
+
 import Common
 import Ship ( Direction(West, North, South, East),
       Game,
@@ -26,7 +28,8 @@ import Ship ( Direction(West, North, South, East),
 main :: IO ()
 main = runTests
     [ testIsRockEnd,
-      testHasCollided
+      testHasCollided,
+      probisRockEnd
     ]
 
 testIsRockEnd ::  Score -> TestTree
@@ -38,6 +41,15 @@ testIsRockEnd sc = testGroup "IsRockEnd" [
     where
         scoreTest :: (Show b, Eq b) => (a -> b, a, b, Int, String) -> TestTree
         scoreTest (f, x, r, n, msg) = scoreTest' sc (return . f, x, r, n, msg)
+
+propIsRockEnd :: (Int, Int) -> Property
+propIsRockEnd p@(x,y) = 
+    not (x<=45 && x>=0) ==> isRockEnd (p, 1) == False
+
+probisRockEnd :: Score -> TestTree
+probisRockEnd sc = testGroup "IsRockEnd" [ 
+    scoreProp sc ("prop_is_rock_end", propIsRockEnd , 1)
+    ]
 
 testHasCollided :: Score -> TestTree
 testHasCollided sc = testGroup "HasCollided" [
