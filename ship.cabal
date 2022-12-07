@@ -31,8 +31,11 @@ test-suite test
   main-is:             Test.hs
   build-depends:       base         >= 4.7 && < 5
                       , brick
+                      , filepath
+                      , directory
                       , containers
                       , QuickCheck
                       , tasty
                       , tasty-hunit
                       , tasty-quickcheck
+                      , process
