@@ -35,7 +35,7 @@ import Linear.V2 (V2(..), _x, _y)
 import System.Random (Random(..), newStdGen, mkStdGen)
 
 data Game = Game
-  { _ship  :: Ship        -- ^ snake as a sequence of points in N2
+  { _ship  :: Ship        -- ^ ship structure built as a sequence of points (not modified during the course of the game)
   , _rocks   :: [Rock]        -- ^ location of the rocks present on the sreen
   , _rockGenerator  :: [(V2 Int)] -- ^ infinite list of random next rock locations
   , _dead   :: Bool         -- ^ game over flag
