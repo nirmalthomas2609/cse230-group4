@@ -67,17 +67,20 @@ width = 45
 updateRockState :: Game -> Rock -> Game
 updateRockState g@Game {_rocks = rrs} s = g & rocks .~ (rrs ++ [s])
 
-nextRocks :: State Game ()
-nextRocks = do
-  rg <- use rockGenerator
-  let f = head (rg)
-  let fs = tail (rg)
-  currGame <- get
-  put (currGame & rockGenerator .~ fs)
-  -- put (currGame)
-  currGameState <- get
-  put (updateRockState currGameState $ rockProducer f)
-  return ()
+nextRocks :: Game -> Game
+nextRocks g@Game { _rockGenerator = r:rs } = updateRockState (g & rockGenerator .~ rs) (rockProducer r)
+
+-- nextRocks :: State Game ()
+-- nextRocks = do
+--   rg <- use rockGenerator
+--   let f = head (rg)
+--   let fs = tail (rg)
+--   currGame <- get
+--   put (currGame & rockGenerator .~ fs)
+--   -- put (currGame)
+--   currGameState <- get
+--   put (updateRockState currGameState $ rockProducer f)
+--   return ()
 
 isRockEnd :: Rock -> Bool
 isRockEnd ((0, _), 1) = True
@@ -117,17 +120,20 @@ hasCollidedRocks :: Ship -> [Rock] -> Bool
 hasCollidedRocks s (r:rs)   = hasCollided s r || hasCollidedRocks s rs
 hasCollidedRocks _ []       = False
 
-addRocksAtRandom :: State Game ()
-addRocksAtRandom = do
-    rg <- use rockGenerator
-    let f   = head (rg)
-    let fs  = tail (rg)
-    currGame <- get
-    put (currGame & rockGenerator .~ fs)
-    -- put (currGame)
-    case f of
-      (V2 0 _) -> return ()
-      _        -> nextRocks
+addRocksAtRandom :: Game -> Game
+addRocksAtRandom g@Game { _rockGenerator = (V2 0 _):rs }  = g & rockGenerator .~ rs
+addRocksAtRandom g@Game { _rockGenerator = _:rs }         = nextRocks $ g & rockGenerator .~ rs
+-- addRocksAtRandom :: State Game ()
+-- addRocksAtRandom = do
+--     rg <- use rockGenerator
+--     let f   = head (rg)
+--     let fs  = tail (rg)
+--     currGame <- get
+--     put (currGame & rockGenerator .~ fs)
+--     -- put (currGame)
+--     case f of
+--       (V2 0 _) -> return ()
+--       _        -> nextRocks
 
 resetShip :: Game -> Game
 resetShip g = g & ship .~ startingCoords
@@ -141,7 +147,7 @@ die g@Game {_ship = s, _rocks = rss, _dead = d}
 
 updateSpace :: Game -> Game
 updateSpace g@Game { _rocks = rrs, _ticksElapsed = te, _speedFactor = sp }
-  | (te `mod` sp) == 0  = execState addRocksAtRandom $ moveSpace g
+  | (te `mod` sp) == 0  = addRocksAtRandom $ moveSpace g --execState addRocksAtRandom $ moveSpace g
   | otherwise           = g
 
 step :: Game -> Game
