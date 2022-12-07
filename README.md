@@ -1,34 +1,55 @@
-# snake
+# Spaceforce
 
-A terminal interface for Snake. This is kind of a toy program, written as a demonstration of the
-[brick](https://hackage.haskell.org/package/brick-0.18) library.
+#### Terminal interface for the Spaceforce game. Built using the haskell [brick](https://hackage.haskell.org/package/brick-0.18) library.
 
 <p align="center">
-  <img src="./docs/img/example.gif"/>
+  <img src="./docs/img/gameGif.gif"/>
 </p>
 
-It is part of my [Introduction to Brick](https://samtay.github.io/posts/introduction-to-brick)
-tutorial. Feel free to leave issues here or on
-[samtay/samtay.github.io](https://github.com/samtay/samtay.github.io)
-if you spot any issues or want to leave feedback.
+## Project Architecture
+The main components of the projects are
+### 1. Ship module
+  This module has the major function related to the functioning to the game. It implements the functionalities listed below and more.
+  * Initialization of the game object
+  * Random generation of the rocks.
+  * Movement of Ship and the rocks.
+  * Collision of Ship with rocks.
+  * Updation of the Score.
+  * Controlling the speed of the game.
+### 2. UI module
+  This module takes care of the game display on the terminal. The Ship module is imported into the UI module and used display the states on the UI. It also implements the function to bind keyboard inputs to the game functions.
 
-## installation
-Installation on MacOS can be accomplished via homebrew:
-```shell
-brew install samtay/tui/snake
-```
-Arch Linux users can install from the [AUR](https://aur.archlinux.org/packages/snake-terminal-git/):
-```shell
-yay -S snake-terminal-git # or yaourt -S snake-terminal-git, etc.
-```
-Others can install from source with [stack](https://docs.haskellstack.org/en/stable/README/#how-to-install):
-```shell
-git clone https://github.com/samtay/snake.git
-cd snake
-stack install snake
-```
-If you are on Debian and want to install via package manager, feel free to open an issue and I'll try to get around to it.
 
-## playing the game
 
-After launching the game, press any of the arrow keys or the letters 'k', 'j', 'l', or 'h' to start the game.
+## Installation
+For installation from source follow these steps
+1. Clone the repository using git clone.
+```shell
+git clone url
+```
+2. Install the required dependencies by running stack install
+```shell
+stack install
+```
+
+## Testing
+The unit testing for game are in the test directory. They can run using
+```shell
+stack test
+```
+The result should show all tests passed.
+
+## Playing the game
+
+Launch the game using
+```shell
+stack run
+```
+
+After launching the game, follow the instructions on the menu. It should something like below.
+
+<p align="center">
+  <img src="./docs/img/gameMenu.jpg"/>
+</p>
+
+Press 'q' to quit at anytime, 'r' to restart the game.
