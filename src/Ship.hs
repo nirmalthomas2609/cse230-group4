@@ -75,15 +75,15 @@ nextRocks = do
   (f :| fs) <- use rockGenerator
   rockGenerator .= fs
   currGameState <- get
-  put (updateRockState currGameState (rockProducer f))
+  put (updateRockState currGameState $ rockProducer f)
   return ()
 
 isRockEnd :: Rock -> Bool
-isRockEnd ((0, _), 1)       = True
+isRockEnd ((0, _), 1) = True
 isRockEnd ((x, _), 0)
-  | x == width-1  = True
-  | otherwise   = False
-isRockEnd _                 = False
+  | x == width-1      = True
+  | otherwise         = False
+isRockEnd _           = False
 
 killRocks :: [Rock] -> [Rock]
 killRocks rrs@(r:rs)
@@ -97,7 +97,7 @@ moveRocks (((x, y), 0):rs)  = ((x+1, y), 0):moveRocks rs
 moveRocks (((x, y), 1):rs)  = ((x-1, y), 1):moveRocks rs
 
 moveSpace :: Game -> Game
-moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks (moveRocks rrs))
+moveSpace g@Game { _rocks = rrs } = g & rocks .~ (killRocks $ moveRocks rrs)
 
 startingCoords :: Ship
 startingCoords = [(cx,cy),(cx-1,cy-1),(cx-1,cy-2),(cx+1,cy-1),(cx+1,cy-2)]
@@ -114,7 +114,7 @@ hasCollided [] _            = False
 
 hasCollidedRocks :: Ship -> [Rock] -> Bool
 hasCollidedRocks s (r:rs)   = hasCollided s r || hasCollidedRocks s rs
-hasCollidedRocks s []       = False
+hasCollidedRocks _ []       = False
 
 addRocksAtRandom :: State Game ()
 addRocksAtRandom = do
@@ -131,17 +131,17 @@ resetShip g = g & ship .~ startingCoords
 die :: Game -> Game
 die g@Game {_ship = s, _rocks = rss, _dead = d}
   | d == True               = g
-  | hasCollidedRocks s rss  = updateScore (resetShip g) (-1)
+  | hasCollidedRocks s rss  = updateSpeed (-1) $ updateScore (-1) $ resetShip g
   | otherwise               = g
 
 updateSpace :: Game -> Game
 updateSpace g@Game { _rocks = rrs, _ticksElapsed = te, _speedFactor = sp }
-  | (te `mod` sp) == 0  = execState addRocksAtRandom (moveSpace g)
+  | (te `mod` sp) == 0  = execState addRocksAtRandom $ moveSpace g
   | otherwise           = g
 
 -- increments Ticks, movesSpace, die, addRocksAtRandom
 step :: Game -> Game
-step g = updateSpace (die (incrementTicksElapsed g))
+step g = updateSpace $ die $ incrementTicksElapsed g
 -- step s = flip execState s . runMaybeT $ do
 --   s_ = moveSpace s
 --   -- Make sure the game isn't paused or over
@@ -161,20 +161,30 @@ directionStep d (x,y)
   | otherwise   = ((x - 1) `mod` width, y)
 
 moveShip :: Direction -> Ship -> Ship
-moveShip d s = map (directionStep d) s
+moveShip d = map (directionStep d)
 
 turn :: Direction -> Game -> Game
-turn d g@Game { _ship = s } = checkIfTop(if ((g ^. dead) == False)  then g & ship .~ moveShip d s else g)
+turn _ g@Game { _dead = True} = g
+turn d g@Game { _ship = s}     --checkIfTop $ g & ship .~ moveShip d s
+  | checkIfTopB s' = updateSpeed 1 $ updateScore 1 $ resetShip g'
+  | otherwise     = g'
+  where
+    g'@Game { _ship = s'} = g & ship .~ moveShip d s
 
-checkIfTop:: Game -> Game
-checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateScore (resetShip g) 1 else g
-checkIfTop _ = error "Ship can't be empty!"
+checkIfTopB :: Ship -> Bool
+checkIfTopB ((x,y):_)
+  | y >= height-1 = True
+  | otherwise     = False
 
-updateSpeed :: Game -> Int -> Game
-updateSpeed g@Game { _speedFactor = sp } v = g & speedFactor .~ (min (max (sp-v) 2) 8)
+-- checkIfTop:: Game -> Game
+-- checkIfTop g@Game{_ship = (x,y):xs} = if y >= height-1 then updateSpeed 1 $ updateScore 1 $ resetShip g else g
+-- checkIfTop _ = error "Ship can't be empty!"
 
-updateScore :: Game -> Int -> Game
-updateScore g@Game { _score = s} v = updateSpeed (g & score .~ (max (s + v) 0)) v
+updateSpeed :: Int -> Game -> Game
+updateSpeed v g@Game { _speedFactor = sp } = g & speedFactor .~ (min 8 $ max 2 $ sp-v)
+
+updateScore :: Int -> Game -> Game
+updateScore v g@Game { _score = s} = g & score .~ (max 0 $ s + v)
 
 resetScore :: Game -> Game
 resetScore g = g & score .~ 0
@@ -187,7 +197,7 @@ setGameOver g@Game { _time = t }
 decrementTimer :: Game -> Game
 decrementTimer g@Game { _time = t, _dead = d}
   | d == True   = g
-  | otherwise   = setGameOver (g & time .~ (t - 1))
+  | otherwise   = setGameOver $ g & time .~ (t - 1)
 
 endGame :: Game -> Int -> Game
 endGame g t = g & endState .~ t
