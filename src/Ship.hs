@@ -2,14 +2,16 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Ship
-  ( initGame
+  ( 
+  Game(..) 
+  , initGame
   , initMenu
   , step
   , turn
   , decrementTimer
   , isRockEnd
-  , hasCollided
-  , Game(..)
+  , resetScore
+  , _score
   , Direction(..)
   , dead, rocks, score, ship, time, endState
   , endGame
