@@ -46,22 +46,12 @@ import Data.Sequence (Seq)
 import qualified Data.Sequence as S
 import Linear.V2 (V2(..))
 
--- Types
-
--- | Ticks mark passing of time
---
--- This is our custom event that will be constantly fed into the app.
 data Tick = Tick | Timer | SpeedUp
 
--- | Named resources
---
--- Not currently used, but will be easier to refactor
--- if we call this "Name" now.
 type Name = ()
 
 data Cell = Ship | Rock | Empty
 
--- App definition
 
 app :: App Game Tick Name
 app = App { appDraw = drawUI
@@ -79,24 +69,16 @@ appM = App { appDraw = drawUIMenu
           , appAttrMap = const theMap
           }
 
-
-
--- createTickThread :: Int -> BChan a -> IO ThreadId
--- createTickThread delay chan = forkIO $ forever $ do { writeBChan chan Tick; threadDelay delay;}                                               
-
--- deployTickThread :: IO ThreadId -> IO ()
--- deployTickThread tickThread = do
-
 main :: IO ()
 main = do
   chan <- newBChan 100
   forkIO $ forever $ do
     writeBChan chan Timer
-    threadDelay 1000000 -- decides how fast your game moves
+    threadDelay 1000000 
 
   forkIO $ forever $ do
     writeBChan chan Tick
-    threadDelay 20 -- decides how fast your game moves
+    threadDelay 20 
 
   m <- initMenu
   let builderMenu = V.mkVty V.defaultConfig
@@ -112,12 +94,10 @@ main = do
       void $ customMain initialVty builder (Just chan) app g
     else
       return ()
--- Handling events
 
 handleEventMenu :: Game -> BrickEvent Name Tick -> EventM Name (Next Game)
 handleEventMenu g (VtyEvent (V.EvKey (V.KChar 's') [])) = halt (endGame g 0)
 handleEventMenu g (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt (endGame g 1)
--- handleEventMenu g (VtyEvent (V.EvKey (V.KChar 'r') [])) = halt (endGame g 2)
 handleEventMenu g _ = continue g
 
 handleEvent :: Game -> BrickEvent Name Tick -> EventM Name (Next Game)
@@ -127,23 +107,17 @@ handleEvent g (VtyEvent (V.EvKey V.KUp []))         = continue $ turn North g
 handleEvent g (VtyEvent (V.EvKey V.KDown []))       = continue $ turn South g
 handleEvent g (VtyEvent (V.EvKey V.KRight []))      = continue $ turn East g
 handleEvent g (VtyEvent (V.EvKey V.KLeft []))       = continue $ turn West g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'k') [])) = continue $ turn North g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'j') [])) = continue $ turn South g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'l') [])) = continue $ turn East g
-handleEvent g (VtyEvent (V.EvKey (V.KChar 'h') [])) = continue $ turn West g
 handleEvent g (VtyEvent (V.EvKey (V.KChar 'r') [])) = liftIO (initGame) >>= continue
 handleEvent g (VtyEvent (V.EvKey (V.KChar 'q') [])) = halt g
 handleEvent g (VtyEvent (V.EvKey V.KEsc []))        = halt g
 handleEvent g _                                     = continue g
 
--- Drawing
 
 drawUIMenu :: Game -> [Widget Name]
 drawUIMenu _ = [ C.center $ padRight (Pad 2) drawMenu ]
 
 drawUI :: Game -> [Widget Name]
 drawUI g = [ C.center $ padRight (Pad 2) (drawStats g) <+> drawGrid g ]
--- drawUI g = [ C.center $ padRight (Pad 2) drawMenu ]
 
 drawMenu :: Widget Name
 drawMenu = withBorderStyle BS.unicodeRounded
